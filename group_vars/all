@@ -1,0 +1,20 @@
+# remote user name
+remote_user_name: umair
+
+# project main directory
+project_main_directory: wagtail_cms_dir
+
+# project name
+site_name: mysite
+
+# proejct virtual env
+project_env: Env
+
+# project main directory path
+project_dir_path: "/home/{{ remote_user_name }}/{{ project_main_directory }}"
+
+# project virtual env path
+project_env_path: "{{ project_dir_path }}/{{ project_env }}"
+
+# project complete path
+project_name_path: "{{ project_dir_path }}/{{ site_name }}"

@@ -1,0 +1,88 @@
+---
+# tasks file for wagtail-cms
+#
+- name: "update all packages on distribution"
+  apt:
+    force_apt_get:  yes
+    state: latest
+    update_cache: yes
+
+- name: "Install required packages"
+  apt:
+    name: ['python3', 'python3-pip', 'python3-virtualenv', 'python3-dev']
+    state: present
+
+- name: "Create a main directory for project using file module"
+  file:
+    path: "{{ project_dir_path }}"
+    state: directory 
+
+- name: "Create virtual environment for project and install wagtail in it"
+  pip:
+    name: ['wagtail', 'mysqlclient']
+    virtualenv: "{{ project_env_path }}"
+    virtualenv_command: virtualenv
+    virtualenv_site_packages: no
+    virtualenv_python: python3
+
+- name: "Create wagtail project"
+  command:
+    cmd:  "{{ project_env_path }}/bin/wagtail start {{ site_name }}"
+    chdir: "{{ project_dir_path }}"
+    creates: "{{ project_name_path }}"
+
+- name: "Remove default SQLLite configuration from wagtail project"
+  replace:
+    path: "{{ project_name_path }}/{{ site_name }}/settings/base.py"
+    regexp: 'DATABASES =\s{(\s+)\S+\s{(\s+\S+\s[\S|a-z|]+\s+){2}\S*\s+}\s+}'
+    replace: ''
+
+- name: "Add MariaDb configuration in wagtail project"
+  blockinfile:
+    path: "{{ project_name_path }}/{{ site_name }}/settings/base.py"
+    block: |
+      DATABASES = {
+        'default': {
+          'ENGINE': 'django.db.backends.mysql',
+          'NAME': 'site_db',
+          'USER': 'root',
+          'PASSWORD': 'IronMan#@!',
+          'HOST': 'localhost',
+          'PORT': '',
+          }
+       }
+
+- name: "Make migrations"
+  shell: "{{ project_env_path }}/bin/python3.8 {{ project_name_path }}/manage.py makemigrations"
+
+- name: "Migrate DB"
+  shell: "{{ project_env_path }}/bin/python3.8 {{ project_name_path }}/manage.py migrate"
+
+- name: "Collect static content"
+  shell: "{{ project_env_path }}/bin/python3.8 {{ project_name_path }}/manage.py collectstatic"
+
+- name: "Install UWSGI"
+  pip:
+    name: uwsgi
+    state: present
+
+- name: "create directory for uwsgi.ini configuration file"
+  file:
+    path: /etc/uwsgi/sites
+    state: directory
+
+- name: "Copy uwsgi file into /etc/uwsgi/sites folder"
+  template:
+    src: uwsgi.j2
+    dest: /etc/uwsgi/sites/{{ site_name }}.ini
+
+
+- name: "Copy uwsgi service file to systemd directory to start the service on reboot"
+  template:
+    src: uwsgi_service.j2
+    dest: /etc/systemd/system/uwsgi.service
+
+
+
+
+

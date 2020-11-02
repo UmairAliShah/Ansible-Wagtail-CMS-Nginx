@@ -1,0 +1,14 @@
+---
+
+- name: Main playbook file
+  hosts: server1
+  remote_user: umair
+  #become_user: root
+  become: yes
+  #become_method: sudo
+  roles:
+    - mysql
+    - wagtail-cms
+    - nginx
+
+

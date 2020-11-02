@@ -1,0 +1,19 @@
+[uwsgi]
+
+project = {{ site_name }}
+uid = {{ remote_user_name }}
+base = /home/%(uid)/{{ project_main_directory }}
+
+chdir = %(base)/%(project)/
+home = %(base)/{{ project_env }}
+module = %(project).wsgi:application
+
+
+master = true
+processes = 5
+
+socket = /run/uwsgi/%(project).sock
+chown-socket = %(uid):www-data
+chmod-socket = 770
+vacuum = true
+

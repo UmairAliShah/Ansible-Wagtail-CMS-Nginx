@@ -1,0 +1,69 @@
+---
+# tasks file for mysql
+#
+- name: "Install Utility Software"
+  apt:
+    name: [ 'python3', 'python3-pip', 'python3-dev', 'software-properties-common', 'python3-pymysql']
+    state: latest
+    update_cache: yes
+
+- name: "Add apt key"
+  command: apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
+
+- name: "Add MariaDB Repository"
+  apt_repository:
+    filename: MariaDB-10.4
+    repo: deb [arch=amd64,arm64,ppc64el] http://mirrors.syringanetworks.net/mariadb/repo/10.4/ubuntu bionic main
+    state: present
+
+- name: "update packages"
+  apt:
+    force_apt_get:  yes
+    state: latest
+    update_cache: yes
+
+- name: "Install MariaDB Packages"
+  apt: 
+    name: ['mariadb-client', 'mariadb-common', 'mariadb-server'] 
+    state: present
+    update_cache: yes
+
+- name: "Install mariadb client"
+  apt: 
+    name: libmariadb-dev
+    state: present
+   
+- name: "Start MariaDB"
+  service: 
+    name: mariadb
+    enabled: true
+    state: started
+
+#- name: Create Database
+#  shell: mysql -e "CREATE DATABASE IF NOT EXISTS {{ db_name }};"
+
+#- name: Create Initial Accounts
+#  shell: mysql -e "CREATE USER IF NOT EXISTS '{{ db_user_name }}'@'%' IDENTIFIED BY '{{ db_user_password }}';"
+
+#- name: Grant Privileges to New Account
+#  shell: mysql -e "GRANT ALL PRIVILEGES ON {{ db_name }}.* TO {{ db_user_name }}@localhost;"
+#  shell: mysql -e "GRANT ALL ON *.* TO '{{ db_user_name }}'@'%' WITH GRANT OPTION;"
+
+#- name: Flush Privileges
+#  shell: mysql -e "FLUSH PRIVILEGES;"
+- name: "Create a new database"
+  mysql_db:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: site_db
+    state: present
+
+- name: "Creating db user"
+  mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: ali
+    password: 12345
+    priv: '*.*:ALL'
+    state: present
+
+- name: "Flush Privileges"
+  shell: mysql -e "FLUSH PRIVILEGES;"

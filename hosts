@@ -1,0 +1,2 @@
+[localserver]
+server01 ansible_hosts=localhost
